@@ -7,72 +7,30 @@ from pyats.async_.exceptions import *
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-class Rip_common_functions():
+class acl_common_functions():
     def configure_ip_address(device,intf,ip_address,mask):
         device.configure('''int {intf}\n no switchport\nip address {ip_address} {mask}\n no shut\n end'''.format(intf = intf,ip_address = ip_address, mask = mask))
 
     def unconfigure_ip_address(device,intf):
         device.configure('''int {intf}\n no ip address\n end'''.format(intf=intf))
 
-    def enabling_rip(device):
+    def enable_rip(device):
         device.configure('''feature rip\n end''')
 
-    def disabling_rip(device):
+    def disable_rip(device):
         device.configure('''no feature rip\n end''')
 
-    def configure_rip_routers(device):
-        device.configure('''router rip 2\n version 2\n end''')
+    def configure_rip(device,intf):
+        device.configure('''int {intf}\n router rip 2\n end'''.format(intf=intf))
 
-    def unconfigure_rip_routers(device):
-        device.configure('''no router rip 2\n end''')
+    def unconfigure_rip(device,intf):
+        device.configure('''int {intf}\n no router rip 2\n end'''.format(intf=intf))
 
-    def configure_rip_interface(device,intf):
-        device.configure('''int {intf}\n ip router rip 2\n end'''.format(intf=intf))
+    def configure_acl(device,acl_name,rule):
+        device.configure('''ip access-list {acl_name}\n {rule}'''.format(acl_name=acl_name,rule=rule))
 
-    def unconfigure_rip_interface(device,intf):
-        device.configure('''int {intf}\n no ip router rip 2\n end'''.format(intf=intf))
-
-    def configure_rip_metric_offset(device,intf):
-        device.configure('''int {intf}\n  ip rip metric-offset 3'''.format(intf = intf))
-
-    def unconfigure_rip_metric_offset(device,intf):
-        device.configure('''int {intf}\n  no ip rip metric-offset 3'''.format(intf = intf))
-
-    def configure_rip_passive_interface(device,intf):
-        device.configure('''int {intf}\n  ip rip passive-interface\n no shutdown\n end'''.format(intf = intf))
-
-
-    def unconfigure_rip_passive_interface(device,intf):
-        device.configure('''int {intf}\n  no ip rip passive-interface'''.format(intf = intf))
-
-    def configure_rip_timers(device):
-        device.configure('''router rip 2\n address-family ipv4 unicast\n timers basic 10 60 60 40\n end''')
-
-    def unconfigure_rip_timers(device):
-        device.configure('''router rip 2\n  no address-family ipv4 unicast\n end''')
-
-    def configure_rip_distance(device):
-        device.configure('''router rip 2\n address-family ipv4 unicast\n distance 100\n end''')
-    def unconfigure_rip_distance(device):
-        device.configure('''router rip 2\n  no address-family ipv4 unicast\n end''')
-
-    def configure_rip_authentication(device,intf):
-        device.configure('''key chain rip\n key 1\n key-string 7 cisco\n exit\n int {intf}\n ip rip authentication key-chain rip\n ip rip authentication mode md5\n end'''.format(intf = intf))
-
-    def unconfigure_rip_authentication(device,intf):
-        device.configure('''no key chain rip\n  int {intf}\n no ip rip authentication key-chain rip\n no ip rip authentication mode md5\n end'''.format(intf = intf))
-
-    def configure_rip_maxpaths(device):
-        device.configure('''router rip 2\n address-family ipv4 unicast\n maximum-paths 5\n end''')
-
-    def unconfigure_rip_maxpaths(device):
-        device.configure('''router rip 2\n  no address-family ipv4 unicast\n end''')
-
-    def configure_rip_redistribution(device):
-        device.configure('''router rip 2\n address-family ipv4 unicast\n redistribute ospf 1 route-map rip\n route-map rip permit\n end''')
-
-    def unconfigure_rip_redistribution(device):
-        device.configure('''router rip 2\n  no address-family ipv4 unicast\n end''')
+    def unconfigure_acl(device,acl_name):
+        device.configure('''no ip access-list {acl_name}'''.format(acl_name=acl_name))
 
     def configure_acl_interface(device,intf,acl_name,bound):
         device.configure('''int {intf} \n ip access-group {acl_name} {bound}'''.format(intf=intf,acl_name=acl_name,bound=bound))
@@ -81,9 +39,10 @@ class Rip_common_functions():
         device.configure('''int {intf} \n no ip access-group {acl_name} {bound}'''.format(intf=intf,acl_name=acl_name,bound=bound))
 
     def sh_version(input):
-        pattern1 = re.compile('  NXOS: version(?P<version>.*)')
+        pattern1 = re.compile(' NXOS: version(?P<version>.*)')
         pattern2 = re.compile('  NXOS image file is: (?P<image>.*)')
-
+#        pattern1 = re.compile('  NXOS: version (\d+\.\d+\(\d+\))')
+#        pattern2 = re.compile('  NXOS image file is: bootflash:///nxos\.\d+\.\d+\.bin')
         output_dict = {}
         for line in input.split("\n"):
             p1 = pattern1.match(line)
