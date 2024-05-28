@@ -1,0 +1,18 @@
+device1:
+    intf: "ethernet1/5"
+    ip_address: "192.168.60.1"
+device2:
+    intf1: "ethernet1/5"
+    ip_address1: "192.168.60.2"
+    intf2: "ethernet1/9"
+    ip_address2: "192.168.11.1"
+device3:
+    intf: "ethernet1/9"
+    ip_address: "192.168.11.2"
+subnet_mask: "255.255.255.0"
+acl_name: 'acl1'
+rule1: 'permit icmp 192.168.11.1/24 any'
+rule2: 'deny icmp 192.168.11.1/24 any'
+rule3: 'permit icmp 192.168.60.1/24 any'
+bound: 'in'
+bound1: 'out'
