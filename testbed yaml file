@@ -1,0 +1,73 @@
+devices:
+  n9k1:
+    connections:
+      cli:
+        ip: 10.133.35.148
+        port: 22
+        protocol: ssh
+
+    credentials:
+      default:
+        password: tcs123
+        username: admin
+      enable:
+        password: tcs123
+    os: nxos
+    type: nxos
+    alias: 'dut1'
+
+  NEXUS9k_4:
+    alias: 'dut2'
+    connections:
+      cli:
+        ip: 10.133.35.143
+        port: 22
+        protocol: ssh
+
+    credentials:
+      default:
+        password: tcs123
+        username: admin
+      enable:
+        password: tcs123
+    os: nxos
+    type: nxos
+
+
+  n9k3:
+    alias: 'dut3'
+    connections:
+      cli:
+        ip: 10.133.35.152
+        port: 22
+        protocol: ssh
+
+    credentials:
+      default:
+        password: tcs123
+        username: admin
+      enable:
+        password: tcs123
+    os: nxos
+    type: nxos
+
+################topology#################
+topology:
+  n9k1:
+    interfaces:
+      Ethernet1/5:
+        link: uut1_uut3_1
+        type: ethernet
+  NEXUS9k_4:
+    interfaces:
+      Ethernet1/9:
+        link: uut2_uut3_1
+        type: ethernet
+  n9k3:
+    interfaces:
+      Ethernet1/5:
+        link: uut3_uut1_1
+        type: ethernet
+      Ethernet1/9:
+        link: uut3_uut2_1
+        type: ethernet
