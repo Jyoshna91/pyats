@@ -1,0 +1,59 @@
+import re
+import logging
+from pyats import aetest
+from pyats.topology import loader
+
+class VerifyACL(aetest.Testcase):
+
+    @aetest.setup
+    def setup(self):
+        try:
+            # Specify the testbed file
+            testbed_file = 'testbed1.yaml'
+            # Load the testbed from the YAML file
+            self.testbed = loader.load(testbed_file)
+            self.device_name = 'n9k1'
+            self.acl_name = 'user-acl-ssh'
+            # Connect to the device specified in the testbed using netconf
+            self.device = self.testbed.devices[self.device_name]
+            self.device.connect(via='netconf')
+        except Exception as e:
+            self.failed(f"Failed to connect to device: {e}")
+    @aetest.test
+    def verify_acl(self):
+
+        try:
+            # Create the NETCONF RPC request
+            verification_request = f"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <nf:rpc message-id="108" xmlns:nf="urn:ietf:params:xml:ns:netconf:base:1.0" xmlns:nxos="http://www.cisco.com/nxos:1.0">
+                <nxos:exec-command>
+                    <nxos:cmd>show ip access-lists {self.acl_name}</nxos:cmd>
+                </nxos:exec-command>
+            </nf:rpc>
+            """
+            # Send the NETCONF request
+            verification_reply = self.device.execute(verification_request)
+
+            # Define the regular expression to match the ACL rule
+            rule = r"<mod:seqno>10</mod:seqno>\s*<mod:permitdeny>[a-z]{6}</mod:permitdeny>\s*<mod:ip>[a-z]{2}</mod:ip>\s*<mod:src_ip_prefix>10\.10\.10\.1/24</mod:src_ip_prefix>\s*<mod:dest_any>[a-z]{3}</mod:dest_any>"
+            # Search for the rule in the reply
+            match = re.search(rule, verification_reply)
+
+            # Verify the match and log results
+            if match:
+                logging.info("The ACL rule is verified successfully.")
+                logging.info("Matched Line: %s", match.group(0))
+            else:
+                self.failed(f"ACL rule matching {rule} not found in the device configuration")
+        except Exception as e:
+            self.failed(f"Failed to send verification command: {e}")
+    @aetest.cleanup
+    def cleanup(self):
+        # Disconnect from the device if connection is established
+        if hasattr(self.device, 'is_connected') and self.device.is_connected():
+            self.device.disconnect()
+
+if __name__ == "__main__":
+    # No need for command-line arguments in this script since testbed and values are hardcoded
+    aetest.main()
