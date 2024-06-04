@@ -182,5 +182,44 @@ class ACLDenyTest(aetest.Testcase):
             sent_pkt = int(ping_result.get('sent_pkt', 0))
             receive_pkt = int(ping_result.get('receive_pkt', 0))
             pkt_loss = ping_result.get('pkt_loss', "0%")
+                        if sent_pkt != receive_pkt and pkt_loss != "0%":
+                logger.info(f"Ping failed as expected with packet loss on device {device.name}")
+                self.passed(f"Ping failed as expected with packet loss on device {device.name}")
+            else:
+                logger.info(f"Ping succeeded unexpectedly on device {device.name}")
+                self.failed(f"Ping succeeded unexpectedly on device {device.name}")
+        except Exception as e:
+            self.failed(f"Failed to send verification command on {device.name}: {e}")
 
+    @aetest.cleanup
+    def unconfigure_acl(self):
+        device = devices['dut2']
+        try:
+            # Unconfigure ACL on the device
+            reply_command_device = NetconfCommonFunctions.unconfigure_acl_on_device(device, acl_name)
+            logging.info(f"Unconfiguration on Device {device.name} Reply: {reply_command_device}")
+
+            # Unconfigure ACL on the interface
+            reply_command_interface = NetconfCommonFunctions.unconfigure_acl_on_interface(device, device1_intf, acl_name, bound)
+            logging.info(f"Unconfiguration on Interface {device.name} Reply: {reply_command_interface}")
+        except Exception as e:
+            self.failed(f"Failed to send unconfiguration command on {device.name}: {e}")
+
+class CommonCleanup(aetest.CommonCleanup):
+    @aetest.subsection
+    def disconnect(self):
+        for name, device in devices.items():
+            device.nc.disconnect()
+            assert not device.nc.connected, f"Device {name} disconnection failed"
+
+if __name__ == '__main__':
+    import argparse
+    from pyats import aetest
+    from genie.testbed import load
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--testbed', dest='testbed', type=loader.load)
+    args, unknown = parser.parse_known_args()
+
+    aetest.main(**vars(args))
            
